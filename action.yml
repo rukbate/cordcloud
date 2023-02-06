@@ -6,10 +6,10 @@ branding:
   color: "gray-dark"
 inputs:
   email:
-    description: "your cordcloud email"
+    description: "${{ secrets.CC_EMAIL }}"
     required: true
   passwd:
-    description: "your cordcloud password"
+    description: "${{ secrets.CC_EMAIL }}"
     required: true
   host:
     description: "base host"
