@@ -2,7 +2,7 @@ name: cc-checkin
 
 on:
   schedule:
-    - cron: "0 0 1,6 * * ? "
+    - cron: "5 1 * * *"
   workflow_dispatch:
 
 jobs:
