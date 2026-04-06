@@ -221,6 +221,7 @@ class Action:
             return {'ret': 0, 'msg': f'Check-in error: {str(e)}'}
 
     def info(self) -> Tuple:
+        print("Fetching user account info...")
         try:
             user_url = self.format_url('user')
             response = self.session.get(user_url, timeout=self.timeout, verify=False)
@@ -235,7 +236,10 @@ class Action:
                 '<span class="traffic-info">剩余流量</span>(.*?)<code class="card-tag tag-green" id="remain">(.*?)</code>',
                 html, re.S)
             if today_used and total_used and rest:
-                return today_used.group(2), total_used.group(2), rest.group(2)
+                result = (today_used.group(2), total_used.group(2), rest.group(2))
+                print(f"User info fetched successfully: {result}")
+                return result
+            print("Warning: Could not parse user info from response")
             return ()
         except Exception as e:
             print(f"Error fetching user info: {e}")
