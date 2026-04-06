@@ -6,6 +6,7 @@ from typing import Tuple
 
 import requests
 import urllib3
+import pyotp
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -53,6 +54,24 @@ class Action:
                     continue
         
         return None
+
+    def generate_mfa_pin(self) -> str:
+        """Generate MFA PIN from CC_SECRET environment variable"""
+        try:
+            cc_secret = os.getenv('CC_SECRET')
+            if not cc_secret:
+                print("Warning: CC_SECRET environment variable not set")
+                return None
+            
+            # Create TOTP object from secret
+            totp = pyotp.TOTP(cc_secret)
+            # Generate current time-based OTP
+            pin = totp.now()
+            print(f"Generated MFA PIN: {pin}")
+            return pin
+        except Exception as e:
+            print(f"Error generating MFA PIN: {e}")
+            return None
 
     def get_chrome_driver(self):
         """Initialize and return a Chrome WebDriver instance"""
@@ -273,12 +292,17 @@ class Action:
                         continue
                 
                 if otp_found:
-                    # Check if we have a code parameter
-                    if self.code:
+                    # Determine which OTP code to use
+                    otp_code = self.code
+                    if not otp_code:
+                        # Generate from CC_SECRET
+                        otp_code = self.generate_mfa_pin()
+                    
+                    if otp_code:
                         print(f"Entering OTP code...")
                         otp_field = driver.find_element(By.ID, 'otp') if driver.find_elements(By.ID, 'otp') else driver.find_elements(By.CLASS_NAME, 'otp-input')[0]
                         otp_field.clear()
-                        otp_field.send_keys(self.code)
+                        otp_field.send_keys(otp_code)
                         
                         # Look for submit button
                         try:
@@ -288,8 +312,8 @@ class Action:
                         except:
                             pass
                     else:
-                        print("Warning: OTP/2FA is required but no code provided")
-                        print("Please provide 'code' parameter for 2FA authentication")
+                        print("Warning: OTP/2FA is required but no code available")
+                        print("Please set CC_SECRET environment variable or provide 'code' parameter")
                         return ()
                 
             except Exception as e:

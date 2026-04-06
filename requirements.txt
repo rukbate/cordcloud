@@ -2,3 +2,4 @@ actions-toolkit
 requests
 selenium
 webdriver-manager
+pyotp
