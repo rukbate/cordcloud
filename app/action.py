@@ -54,6 +54,52 @@ class Action:
         
         return None
 
+    def get_chrome_driver(self):
+        """Initialize and return a Chrome WebDriver instance"""
+        chrome_options = Options()
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-setuid-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+        chrome_options.add_argument('user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+        chrome_options.add_argument('--headless')  # Run in background
+        
+        # Try to use system chromium if available, otherwise use webdriver-manager
+        try:
+            # Check for chromium (Debian/Ubuntu)
+            chromium_paths = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium']
+            chromium_binary = None
+            
+            for path in chromium_paths:
+                if os.path.exists(path):
+                    chromium_binary = path
+                    break
+            
+            if chromium_binary:
+                chrome_options.binary_location = chromium_binary
+                # Get the chromium version and download matching chromedriver
+                chromium_version = self.get_chromium_version()
+                if chromium_version:
+                    print(f"Detected Chromium version: {chromium_version}")
+                    service = Service(ChromeDriverManager(driver_version=chromium_version).install())
+                else:
+                    print("Could not detect Chromium version, using webdriver-manager default")
+                    service = Service(ChromeDriverManager().install())
+            else:
+                # Use webdriver-manager to get the correct chromedriver
+                service = Service(ChromeDriverManager().install())
+            
+            return webdriver.Chrome(service=service, options=chrome_options)
+        except Exception as e:
+            # Fallback: try without version matching
+            print(f"Failed to create driver with version matching: {str(e)}, trying fallback...")
+            try:
+                service = Service(ChromeDriverManager().install())
+                return webdriver.Chrome(service=service, options=chrome_options)
+            except Exception:
+                raise Exception(f"Failed to initialize Chrome driver: {str(e)}")
+
     def format_url(self, path) -> str:
         return f'https://{self.host}/{path}'
 
@@ -62,50 +108,8 @@ class Action:
         try:
             login_url = self.format_url('auth/login')
             
-            # Setup Chrome options
-            chrome_options = Options()
-            chrome_options.add_argument('--no-sandbox')
-            chrome_options.add_argument('--disable-setuid-sandbox')
-            chrome_options.add_argument('--disable-dev-shm-usage')
-            chrome_options.add_argument('--disable-gpu')
-            chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-            chrome_options.add_argument('user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
-            chrome_options.add_argument('--headless')  # Run in background
-            
-            # Try to use system chromium if available, otherwise use webdriver-manager
-            try:
-                # Check for chromium (Debian/Ubuntu)
-                chromium_paths = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium']
-                chromium_binary = None
-                
-                for path in chromium_paths:
-                    if os.path.exists(path):
-                        chromium_binary = path
-                        break
-                
-                if chromium_binary:
-                    chrome_options.binary_location = chromium_binary
-                    # Get the chromium version and download matching chromedriver
-                    chromium_version = self.get_chromium_version()
-                    if chromium_version:
-                        print(f"Detected Chromium version: {chromium_version}")
-                        service = Service(ChromeDriverManager(driver_version=chromium_version).install())
-                    else:
-                        print("Could not detect Chromium version, using webdriver-manager default")
-                        service = Service(ChromeDriverManager().install())
-                else:
-                    # Use webdriver-manager to get the correct chromedriver
-                    service = Service(ChromeDriverManager().install())
-                
-                driver = webdriver.Chrome(service=service, options=chrome_options)
-            except Exception as e:
-                # Fallback: try without version matching
-                print(f"Failed to create driver with version matching: {str(e)}, trying fallback...")
-                try:
-                    service = Service(ChromeDriverManager().install())
-                    driver = webdriver.Chrome(service=service, options=chrome_options)
-                except Exception:
-                    raise Exception(f"Failed to initialize Chrome driver: {str(e)}")
+            # Initialize Chrome driver
+            driver = self.get_chrome_driver()
             
             try:
                 # Navigate to login page
@@ -221,11 +225,79 @@ class Action:
             return {'ret': 0, 'msg': f'Check-in error: {str(e)}'}
 
     def info(self) -> Tuple:
-        print("Fetching user account info...")
+        print("Fetching user account info using Selenium...")
+        driver = None
         try:
             user_url = self.format_url('user')
-            response = self.session.get(user_url, timeout=self.timeout, verify=False)
-            html = response.text
+            
+            # Initialize Chrome driver
+            driver = self.get_chrome_driver()
+            
+            # Add session cookies to the driver
+            driver.get(self.format_url(''))  # Visit domain first to set cookies
+            for name, value in self.session.cookies.items():
+                try:
+                    driver.add_cookie({'name': name, 'value': value, 'domain': self.host})
+                except Exception as e:
+                    print(f"Warning: Could not add cookie {name}: {e}")
+            
+            # Navigate to user page
+            driver.get(user_url)
+            wait = WebDriverWait(driver, 10)
+            
+            # Check for OTP/2FA requirement
+            print("Checking for OTP requirement...")
+            time.sleep(2)  # Give page time to load
+            
+            try:
+                # Look for OTP input, modal, or messages
+                otp_indicators = [
+                    (By.ID, 'otp'),
+                    (By.ID, 'totp'),
+                    (By.ID, 'pin'),
+                    (By.CLASS_NAME, 'otp-input'),
+                    (By.XPATH, "//input[contains(@placeholder, 'OTP')]"),
+                    (By.XPATH, "//input[contains(@placeholder, 'PIN')]"),
+                    (By.XPATH, "//input[contains(@placeholder, 'authenticator')]"),
+                ]
+                
+                otp_found = False
+                for by_type, selector in otp_indicators:
+                    try:
+                        elements = driver.find_elements(by_type, selector)
+                        if elements:
+                            otp_found = True
+                            print("OTP/2FA input field detected on page")
+                            break
+                    except:
+                        continue
+                
+                if otp_found:
+                    # Check if we have a code parameter
+                    if self.code:
+                        print(f"Entering OTP code...")
+                        otp_field = driver.find_element(By.ID, 'otp') if driver.find_elements(By.ID, 'otp') else driver.find_elements(By.CLASS_NAME, 'otp-input')[0]
+                        otp_field.clear()
+                        otp_field.send_keys(self.code)
+                        
+                        # Look for submit button
+                        try:
+                            submit_btn = driver.find_element(By.XPATH, "//button[contains(text(), 'Verify')] | //button[contains(text(), 'Submit')] | //button[contains(text(), '验证')] | //button[contains(text(), '提交')]")
+                            submit_btn.click()
+                            time.sleep(2)  # Wait for verification
+                        except:
+                            pass
+                    else:
+                        print("Warning: OTP/2FA is required but no code provided")
+                        print("Please provide 'code' parameter for 2FA authentication")
+                        return ()
+                
+            except Exception as e:
+                print(f"Error checking for OTP: {e}")
+            
+            # Parse traffic info from page
+            print("Parsing traffic information...")
+            html = driver.page_source
             
             today_used = re.search('<span class="traffic-info">今日已用</span>(.*?)<code class="card-tag tag-red">(.*?)</code>',
                                    html, re.S)
@@ -235,15 +307,21 @@ class Action:
             rest = re.search(
                 '<span class="traffic-info">剩余流量</span>(.*?)<code class="card-tag tag-green" id="remain">(.*?)</code>',
                 html, re.S)
+            
             if today_used and total_used and rest:
                 result = (today_used.group(2), total_used.group(2), rest.group(2))
                 print(f"User info fetched successfully: {result}")
                 return result
+            
             print("Warning: Could not parse user info from response")
             return ()
+            
         except Exception as e:
             print(f"Error fetching user info: {e}")
             return ()
+        finally:
+            if driver:
+                driver.quit()
 
     def run(self):
         self.login()
