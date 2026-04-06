@@ -146,11 +146,18 @@ class Action:
                 passwd_field.clear()
                 passwd_field.send_keys(self.passwd)
                 
-                # If verification code is provided
-                if self.code:
+                # Handle verification code (MFA)
+                try:
                     code_field = driver.find_element(By.ID, 'code')
-                    code_field.clear()
-                    code_field.send_keys(self.code)
+                    # Use provided code or generate from CC_SECRET
+                    otp_code = self.code or self.generate_mfa_pin()
+                    if otp_code:
+                        code_field.clear()
+                        code_field.send_keys(otp_code)
+                        print(f"Entered MFA code during login")
+                except:
+                    # Code field may not be present on this page
+                    pass
                 
                 # Wait for ALTCHA widget to appear
                 altcha_widget = wait.until(
