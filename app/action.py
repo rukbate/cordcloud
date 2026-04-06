@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import subprocess
 from typing import Tuple
 
 import requests
@@ -36,6 +37,23 @@ class Action:
             'Upgrade-Insecure-Requests': '1',
         })
 
+    def get_chromium_version(self) -> str:
+        """Detect the installed Chromium version"""
+        chromium_paths = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium']
+        
+        for path in chromium_paths:
+            if os.path.exists(path):
+                try:
+                    output = subprocess.check_output([path, '--version']).decode().strip()
+                    # Extract version number: "Chromium 114.0.5735.198"
+                    match = re.search(r'(\d+)', output)
+                    if match:
+                        return match.group(1)
+                except Exception:
+                    continue
+        
+        return None
+
     def format_url(self, path) -> str:
         return f'https://{self.host}/{path}'
 
@@ -67,12 +85,22 @@ class Action:
                 
                 if chromium_binary:
                     chrome_options.binary_location = chromium_binary
+                    # Get the chromium version and download matching chromedriver
+                    chromium_version = self.get_chromium_version()
+                    if chromium_version:
+                        print(f"Detected Chromium version: {chromium_version}")
+                        service = Service(ChromeDriverManager(version=chromium_version).install())
+                    else:
+                        print("Could not detect Chromium version, using webdriver-manager default")
+                        service = Service(ChromeDriverManager().install())
+                else:
+                    # Use webdriver-manager to get the correct chromedriver
+                    service = Service(ChromeDriverManager().install())
                 
-                # Use webdriver-manager to get the correct chromedriver
-                service = Service(ChromeDriverManager().install())
                 driver = webdriver.Chrome(service=service, options=chrome_options)
             except Exception as e:
-                # Fallback: try without specifying binary location
+                # Fallback: try without version matching
+                print(f"Failed to create driver with version matching: {str(e)}, trying fallback...")
                 try:
                     service = Service(ChromeDriverManager().install())
                     driver = webdriver.Chrome(service=service, options=chrome_options)
