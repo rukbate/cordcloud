@@ -19,10 +19,11 @@ urllib3.disable_warnings()
 
 
 class Action:
-    def __init__(self, email: str, passwd: str, code: str = '', host: str = 'cordcloud.us'):
+    def __init__(self, email: str, passwd: str, code: str = '', host: str = 'cordcloud.us', secret: str = ''):
         self.email = email
         self.passwd = passwd
         self.code = code
+        self.secret = secret
         self.host = host.replace('https://', '').replace('http://', '').strip()
         self.session = requests.session()
         self.timeout = 6
@@ -56,15 +57,14 @@ class Action:
         return None
 
     def generate_mfa_pin(self) -> str:
-        """Generate MFA PIN from CC_SECRET environment variable"""
+        """Generate MFA PIN from secret key"""
         try:
-            cc_secret = os.getenv('CC_SECRET')
-            if not cc_secret:
-                print("Warning: CC_SECRET environment variable not set")
+            if not self.secret:
+                print("Warning: Secret not provided for MFA PIN generation")
                 return None
             
             # Create TOTP object from secret
-            totp = pyotp.TOTP(cc_secret)
+            totp = pyotp.TOTP(self.secret)
             # Generate current time-based OTP
             pin = totp.now()
             print(f"Generated MFA PIN: {pin}")
@@ -320,7 +320,7 @@ class Action:
                             pass
                     else:
                         print("Warning: OTP/2FA is required but no code available")
-                        print("Please set CC_SECRET environment variable or provide 'code' parameter")
+                        print("Please provide 'secret' parameter for 2FA authentication")
                         return ()
                 
             except Exception as e:

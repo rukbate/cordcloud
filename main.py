@@ -21,6 +21,7 @@ try:
     email = core.get_input('email', required=True)
     passwd = core.get_input('passwd', required=True)
     host = core.get_input('host') or 'cordcloud.us,cordcloud.one,cordcloud.biz,c-cloud.xyz'
+    secret = core.get_input('secret', required=True)
     # email = 'xxxx@hotmail.com'
     # passwd = 'xxxxxxxx'
     # host = 'cordcloud.us,cordcloud.one,cordcloud.biz,c-cloud.xyz'
@@ -31,7 +32,7 @@ try:
     for i, h in enumerate(hosts):
         # 依次尝试每个 host
         log.info(f'当前尝试 host：{h}')
-        action = Action(email, passwd, host=h)
+        action = Action(email, passwd, host=h, secret=secret)
         try:
             # 登录
             res = action.login()
