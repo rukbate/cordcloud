@@ -1,6 +1,6 @@
 from string import Template
 
-# from actions_toolkit import core
+from actions_toolkit import core
 
 from app import log
 from app.action import Action
