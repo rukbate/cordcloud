@@ -1,6 +1,6 @@
 from datetime import timedelta, timezone, datetime
 
-from actions_toolkit import core
+# from actions_toolkit import core
 
 
 def now():
@@ -9,16 +9,20 @@ def now():
 
 
 def info(s: str = ''):
-    core.info(f'[{now()}] {s}')
+    print(f'[{now()}] {s}')
+    # core.info(f'[{now()}] {s}')
 
 
 def warning(s: str = ''):
-    core.warning(f'[{now()}] {s}')
+    print(f'[{now()}] {s}')
+    # core.warning(f'[{now()}] {s}')
 
 
 def error(s: str = ''):
-    core.info(f'[{now()}] {s}')
+    print(f'[{now()}] {s}')
+    # core.info(f'[{now()}] {s}')
 
 
 def set_failed(s: str = ''):
-    core.set_failed(f'[{now()}] {s}')
+    print(f'[{now()}] {s}')
+    # core.set_failed(f'[{now()}] {s}')

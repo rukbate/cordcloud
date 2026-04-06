@@ -1,6 +1,6 @@
 from string import Template
 
-from actions_toolkit import core
+# from actions_toolkit import core
 
 from app import log
 from app.action import Action
@@ -20,6 +20,9 @@ try:
     email = core.get_input('email', required=True)
     passwd = core.get_input('passwd', required=True)
     host = core.get_input('host') or 'cordcloud.us,cordcloud.one,cordcloud.biz,c-cloud.xyz'
+    # email = 'xxxx@hotmail.com'
+    # passwd = 'xxxxxxxx'
+    # host = 'cordcloud.us,cordcloud.one,cordcloud.biz,c-cloud.xyz'
 
     # host 预处理：切分、过滤空值
     hosts = [h for h in host.split(',') if h]
@@ -31,6 +34,7 @@ try:
         try:
             # 登录
             res = action.login()
+            log.info(res)
             if res['ret'] != 1:
                 log.set_failed(f'CordCloud 帐号登录失败，错误信息：{res["msg"]}')
             log.info(f'尝试帐号登录，结果：{res["msg"]}')

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width" name="viewport">
+    <meta name="theme-color" content="#4285f4">
+    <title>CordCloud</title>
+    <!-- css -->
+    <link href="/theme/material/css/base.min.css" rel="stylesheet">
+    <link href="/theme/material/css/project.min.css" rel="stylesheet">
+    <link href="/theme/material/css/auth.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons" rel="stylesheet">
+    <style>
+        .divcss5 {
+            position: fixed;
+            bottom: 0;
+        }
+    </style>
+    <!-- js -->
+    <script src="/assets/js/fuck.min.js"></script>
+
+</head>
+
+<body class="page-brand"><link href="/theme/material/css/auth-modern.css" rel="stylesheet">
+
+<div class="auth-modern-page">
+    <div class="auth-card-wrapper">
+        <div class="auth-card">
+            <div class="auth-card-header">
+                <h1 class="auth-card-title">欢迎回来</h1>
+                <p class="auth-card-subtitle">登录您的账户以继续</p>
+            </div>
+
+            <div class="auth-card-body">
+                <div class="auth-nav-tabs">
+                    <a href="/auth/login" class="auth-nav-tab active">登录</a>
+                    <a href="/auth/register" class="auth-nav-tab">注册</a>
+                </div>
+
+                <form action="javascript:void(0);" method="POST" id="login-form">
+                    <input type="hidden" name="csrf_token" value="ZUnoEDsMeDnFXOQdTi9CfzEZDJyOKbF9yOB1sMIPzuHuNnof3tS3XSisK3IhblIF">
+
+                    <div class="auth-form-group">
+                        <label class="auth-form-label">邮箱地址</label>
+                        <div class="auth-input-wrapper">
+                            <input type="email"
+                                   class="auth-form-input"
+                                   id="email"
+                                   name="Email"
+                                   placeholder="请输入您的邮箱"
+                                   inputmode="email"
+                                   autocomplete="username">
+                            <i class="icon auth-input-icon">email</i>
+                        </div>
+                    </div>
+
+                    <div class="auth-form-group">
+                        <label class="auth-form-label">密码</label>
+                        <div class="auth-input-wrapper">
+                            <input type="password"
+                                   class="auth-form-input"
+                                   id="passwd"
+                                   name="Password"
+                                   placeholder="请输入您的密码"
+                                   autocomplete="current-password">
+                            <i class="icon auth-input-icon">lock</i>
+                            <button type="button" class="auth-password-toggle" id="toggle-passwd">
+                                <i class="icon">visibility_off</i>
+                            </button>
+                        </div>
+                    </div>
+
+                    
+                    
+                    
+                    
+                                        <div class="auth-captcha-wrapper altcha-wrapper" id="altcha-container">
+                        <altcha-widget
+                            id="altcha-widget"
+                            challengeurl="/auth/altcha/challenge"
+                            auto="onload"
+                            hidefooter
+                            hidelogo>
+                        </altcha-widget>
+                    </div>
+                    <script>
+                    (function() {
+                        var widget = document.getElementById('altcha-widget');
+                        var container = document.getElementById('altcha-container');
+                        if (widget && container) {
+                            var observer = new MutationObserver(function() {
+                                var state = widget.getAttribute('data-state');
+                                container.classList.remove('altcha-verifying', 'altcha-verified');
+                                if (state === 'verifying') container.classList.add('altcha-verifying');
+                                if (state === 'verified') container.classList.add('altcha-verified');
+                            });
+                            observer.observe(widget, { attributes: true, attributeFilter: ['data-state'] });
+                        }
+                    })();
+                    </script>
+                    
+                    <div class="auth-helper-row">
+                        <label class="auth-checkbox-wrapper">
+                            <input type="checkbox" class="auth-checkbox" value="week" id="remember_me" name="remember_me">
+                            <span class="auth-checkbox-label">记住我</span>
+                        </label>
+                        <a href="/password/reset" class="auth-link">忘记密码？</a>
+                    </div>
+
+                    <button type="submit" id="login" class="auth-btn-primary">
+                        登 录
+                    </button>
+                </form>
+
+                                <div class="auth-divider">
+                    <span class="auth-divider-text">或使用以下方式登录</span>
+                </div>
+
+                <div class="auth-social-buttons">
+                                        <button type="button" id="passkey-login-btn" class="auth-social-btn passkey-btn" style="display: none;">
+                        <i class="icon">fingerprint</i>
+                        <span>Passkey</span>
+                    </button>
+                    
+                                    </div>
+                            </div>
+
+            <div class="auth-card-footer">
+                <p class="auth-footer-text">
+                    还没有账户？<a href="/auth/register">立即注册</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div aria-hidden="true" class="modal modal-va-middle fade" id="result" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-xs">
+        <div class="modal-content">
+            <div class="modal-inner">
+                <p class="h5 margin-top-sm text-black-hint" id="msg"></p>
+            </div>
+            <div class="modal-footer">
+                <p class="text-right">
+                    <button class="btn btn-flat btn-brand-accent waves-attach" data-dismiss="modal" type="button"
+                            id="result_ok">知道了
+                    </button>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<footer class="ui-footer">
+    <div class="container">
+        &copy;2026 CordCloud
+         <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WDQMPH0H2X"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+   function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WDQMPH0H2X');
+</script>    </div>
+</footer>
+
+<!-- js -->
+<script src="/js/jquery.js"></script>
+<script src="/theme/material/js/base.min.js"></script>
+<script src="/theme/material/js/project.min.js"></script>
+
+</body>
+
+<script type="text/javascript"> window.$crisp = [];
+    window.CRISP_WEBSITE_ID = "f24e0785-07d5-4a5f-961b-bde1c9b6245b";
+    (function () {
+        d = document;
+        s = d.createElement("script");
+        s.src = "https://client.crisp.chat/l.js";
+        s.async = 1;
+        d.getElementsByTagName("head")[0].appendChild(s);
+    })();
+    $crisp.push(["safe", true])
+    </script>
+
+
+</html>
+<script src="/js/fp.umd.min.js"></script>
+<script src="/js/webauthn.js"></script>
+
+
+<script>
+// 密码显示切换
+document.getElementById('toggle-passwd').addEventListener('click', function() {
+    var input = document.getElementById('passwd');
+    var icon = this.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility';
+    } else {
+        input.type = 'password';
+        icon.textContent = 'visibility_off';
+    }
+});
+
+var deviceFingerprint = '';
+var fingerprintReady = false;
+
+(function() {
+    FingerprintJS.load()
+        .then(function(fp) { return fp.get(); })
+        .then(function(result) {
+            deviceFingerprint = result.visitorId;
+            fingerprintReady = true;
+        })
+        .catch(function() {
+            deviceFingerprint = 'fallback_' + Date.now();
+            fingerprintReady = true;
+        });
+})();
+</script>
+
+
+
+
+<script>
+    var calltgbtn = document.querySelector('#calltgauth');
+    var tgboard = document.querySelector('.card.auth-tg.cust-model');
+    if (calltgbtn && tgboard) {
+        custModal(calltgbtn, tgboard);
+    }
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        function login() {
+            
+            var loginBtn = document.getElementById("login");
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+            loginBtn.innerHTML = '登录中';
+
+            $.ajax({
+                type: "POST",
+                url: location.pathname,
+                dataType: "json",
+                data: {
+                    altcha: (function() {
+                        var altchaInput = document.querySelector('input[name="altcha"]');
+                        return altchaInput ? altchaInput.value : '';
+                    })(),
+                    code: document.getElementById('code') ? $$getValue('code') : '',
+                    email: $$getValue('email'),
+                    passwd: $$getValue('passwd'),
+                    remember_me: $("#remember_me:checked").val(),
+                    csrf_token: document.querySelector('input[name="csrf_token"]').value,
+                    device_fingerprint: deviceFingerprint
+                },
+                success: function(data) {
+                    if (data.ret == 1) {
+                        $("#result").modal();
+                        $$.getElementById('msg').innerHTML = data.msg;
+                        window.setTimeout("location.href='" + (data.redirect || '/user') + "'", 500);
+                    } else if (data.ret == 2 && data.need_device_2fa) {
+                        $("#result").modal();
+                        $$.getElementById('msg').innerHTML = data.msg;
+                        window.setTimeout("location.href='" + (data.redirect || '/auth/login/2fa?token=' + data.token) + "'", 500);
+                    } else {
+                        $("#result").modal();
+                        $$.getElementById('msg').innerHTML = data.msg;
+                        resetLoginBtn();
+                                                                                                                        var altchaWidget = document.querySelector('altcha-widget');
+                        if (altchaWidget) {
+                            altchaWidget.reset();
+                        }
+                                            }
+                },
+                error: function(jqXHR) {
+                    $("#result").modal();
+                    $$.getElementById('msg').innerHTML = '发生错误：' + jqXHR.status;
+                    resetLoginBtn();
+                                                                                                    var altchaWidget = document.querySelector('altcha-widget');
+                    if (altchaWidget) {
+                        altchaWidget.reset();
+                    }
+                                    }
+            });
+        }
+
+        function resetLoginBtn() {
+            var loginBtn = document.getElementById("login");
+            loginBtn.disabled = false;
+            loginBtn.classList.remove('loading');
+            loginBtn.innerHTML = '登 录';
+        }
+
+        $("html").keydown(function (event) {
+            if (event.keyCode == 13) {
+                login();
+            }
+        });
+
+        $("#login").click(function () {
+            login();
+        });
+
+        $('div.modal').on('shown.bs.modal', function () {
+            $("div.gt_slider_knob").hide();
+        });
+
+        $('div.modal').on('hidden.bs.modal', function () {
+            $("div.gt_slider_knob").show();
+        });
+    })
+</script>
+
+
+<script async defer src="/js/altcha.min.js" type="module"></script>
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    var altchaWidget = document.querySelector('altcha-widget');
+    if (altchaWidget) {
+        altchaWidget.setAttribute('strings', JSON.stringify({
+            label: '点击验证',
+            loading: '加载中...',
+            verifying: '验证中...',
+            verified: '验证成功',
+            error: '验证失败，请重试',
+            expired: '验证已过期，请重试'
+        }));
+    }
+});
+
+</script>
+
+<script>
+$(document).ready(function() {
+    if (typeof WebAuthnUtils !== 'undefined' && WebAuthnUtils.isSupported()) {
+        document.getElementById('passkey-login-btn').style.display = '';
+
+        document.getElementById('passkey-login-btn').addEventListener('click', async function() {
+            var btn = this;
+            btn.disabled = true;
+
+            try {
+                var email = document.getElementById('email').value.trim();
+
+                var optionsResp = await $.ajax({
+                    type: 'POST',
+                    url: '/auth/passkey/login/options',
+                    dataType: 'json',
+                    data: { email: email }
+                });
+
+                if (optionsResp.ret !== 1) {
+                    throw new Error(optionsResp.msg || '获取登录选项失败');
+                }
+
+                var credential = await WebAuthnUtils.login(optionsResp.options);
+
+                var verifyResp = await $.ajax({
+                    type: 'POST',
+                    url: '/auth/passkey/login/verify',
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        credential: credential,
+                        remember_me: document.getElementById('remember_me').checked ? 'week' : '',
+                        device_fingerprint: deviceFingerprint
+                    })
+                });
+
+                if (verifyResp.ret === 1) {
+                    $("#result").modal();
+                    document.getElementById('msg').innerHTML = verifyResp.msg || '登录成功';
+                    setTimeout(function() {
+                        location.href = verifyResp.redirect || '/user';
+                    }, 500);
+                } else {
+                    throw new Error(verifyResp.msg || 'Passkey 验证失败');
+                }
+            } catch (error) {
+                $("#result").modal();
+                document.getElementById('msg').innerHTML = error.message || 'Passkey 登录失败';
+                btn.disabled = false;
+            }
+        });
+    }
+});
+</script>
