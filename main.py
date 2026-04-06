@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from string import Template
 
 from actions_toolkit import core

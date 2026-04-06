@@ -53,4 +53,5 @@ RUN python3 -m pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 ENV PYTHONPATH /app
-CMD ["/app/main.py"]
+RUN chmod +x /app/main.py
+CMD ["python3", "/app/main.py"]
