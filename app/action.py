@@ -56,19 +56,28 @@ class Action:
             
             # Try to use system chromium if available, otherwise use webdriver-manager
             try:
-                # Check for chromium-browser (Debian/Ubuntu)
-                if os.path.exists('/usr/bin/chromium-browser'):
-                    chrome_options.binary_location = '/usr/bin/chromium-browser'
-                    service = Service('/usr/bin/chromedriver')
-                    driver = webdriver.Chrome(service=service, options=chrome_options)
-                else:
-                    # Fallback to webdriver-manager
-                    service = Service(ChromeDriverManager().install())
-                    driver = webdriver.Chrome(service=service, options=chrome_options)
-            except Exception:
-                # Final fallback: just use webdriver-manager
+                # Check for chromium (Debian/Ubuntu)
+                chromium_paths = ['/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium']
+                chromium_binary = None
+                
+                for path in chromium_paths:
+                    if os.path.exists(path):
+                        chromium_binary = path
+                        break
+                
+                if chromium_binary:
+                    chrome_options.binary_location = chromium_binary
+                
+                # Use webdriver-manager to get the correct chromedriver
                 service = Service(ChromeDriverManager().install())
                 driver = webdriver.Chrome(service=service, options=chrome_options)
+            except Exception as e:
+                # Fallback: try without specifying binary location
+                try:
+                    service = Service(ChromeDriverManager().install())
+                    driver = webdriver.Chrome(service=service, options=chrome_options)
+                except Exception:
+                    raise Exception(f"Failed to initialize Chrome driver: {str(e)}")
             
             try:
                 # Navigate to login page

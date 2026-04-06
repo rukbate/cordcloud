@@ -4,10 +4,10 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Install Chrome and dependencies required for Selenium
+# Install Chromium and dependencies required for Selenium
 RUN apt-get update && apt-get install -y \
-    chromium-browser \
-    chromium-driver \
+    chromium \
+    chromium-sandbox \
     fonts-liberation \
     libappindicator3-1 \
     libasound2 \
