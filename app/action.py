@@ -89,7 +89,7 @@ class Action:
                     chromium_version = self.get_chromium_version()
                     if chromium_version:
                         print(f"Detected Chromium version: {chromium_version}")
-                        service = Service(ChromeDriverManager(version=chromium_version).install())
+                        service = Service(ChromeDriverManager(driver_version=chromium_version).install())
                     else:
                         print("Could not detect Chromium version, using webdriver-manager default")
                         service = Service(ChromeDriverManager().install())
